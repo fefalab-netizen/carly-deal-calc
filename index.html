@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#141a2e">
+<title>Carly's Deal Calc</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--text:#0f172a;--muted:#5b6475;--line:#dde2ea;--accent:#1d4ed8;--accent-weak:#e7eeff;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--bad-bg:#fdecec;--warn-bg:#fff5e1;--ok-bg:#e7f6ec;--input:#fff;--track:#e8ebf1;--stop:#b91c1c;--stop-text:#fff;--on-accent:#fff;--shadow:0 1px 2px rgba(0,0,0,.05),0 2px 10px rgba(0,0,0,.04)}
+@media (prefers-color-scheme: dark){:root{--bg:#0b1020;--card:#141a2e;--text:#e8ebf4;--muted:#9aa4ba;--line:#283150;--accent:#7aa2ff;--accent-weak:#1b2546;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--bad-bg:#3a1519;--warn-bg:#382a10;--ok-bg:#11301f;--input:#0e1426;--track:#232b45;--stop:#9f1d1d;--stop-text:#fff;--on-accent:#0b1020;--shadow:none}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+header.app{display:flex;align-items:center;gap:10px;padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top));background:var(--card);border-bottom:1px solid var(--line)}
+header.app h1{font-size:17px;margin:0;flex:1;letter-spacing:.2px}
+header.app h1 small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+nav.tabs{display:flex;gap:6px}
+nav.tabs a{padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:15px}
+nav.tabs a.on{background:var(--accent-weak);color:var(--accent)}
+main{max-width:980px;margin:0 auto;padding:12px 12px 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:var(--shadow)}
+.card h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.card h2 .tag{margin-left:auto}
+.muted{color:var(--muted)}.small{font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+@media (min-width:900px){.deal-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+input,select,textarea{font:inherit;font-size:17px;color:var(--text);background:var(--input);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:48px;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+input:disabled,select:disabled{opacity:.5}
+.btn{font:inherit;font-weight:600;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--bad)}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:48px}
+.seg button{flex:1;font:inherit;font-size:15px;font-weight:600;background:var(--input);color:var(--text);border:0;border-right:1px solid var(--line);cursor:pointer;padding:8px 6px}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:var(--on-accent)}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:var(--accent-weak);color:var(--accent);white-space:nowrap}
+.tag.front{background:#efe6ff;color:#6d28d9}.tag.back{background:#e3f4f4;color:#0f766e}
+@media (prefers-color-scheme: dark){.tag.front{background:#2c1f4d;color:#c4b5fd}.tag.back{background:#0f3533;color:#5eead4}}
+.tag.sample{background:var(--warn-bg);color:var(--warn)}
+.tag.newest{background:var(--ok-bg);color:var(--ok)}
+.note{border-radius:10px;padding:10px 12px;font-size:14px;margin:8px 0}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note.ok{background:var(--ok-bg);color:var(--ok)}
+.note.info{background:var(--accent-weak);color:var(--accent)}
+/* sticky hard-stop banner */
+#banner{position:sticky;top:0;z-index:20;margin:0 -12px;padding:0 12px}
+.banner{border-radius:0 0 14px 14px;padding:10px 12px;box-shadow:0 4px 14px rgba(0,0,0,.18);background:var(--card);border:1px solid var(--line);border-top:0}
+.banner.stop{background:var(--stop);color:var(--stop-text);border-color:var(--stop)}
+.banner .facts{font-size:13px;opacity:.95;margin-bottom:6px}
+.banner .pill{display:inline-block;background:#fff;color:#b91c1c;font-weight:800;font-size:13px;border-radius:8px;padding:3px 8px;margin:0 4px 4px 0;text-transform:uppercase;letter-spacing:.3px}
+.banner .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.banner .kpi{background:rgba(0,0,0,.18);border-radius:9px;padding:5px 7px;min-width:0}
+.banner:not(.stop) .kpi{background:var(--bg)}
+.banner .kpi b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner .kpi span{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.3px}
+.banner .kpi.neg b{color:#ffd0d0}
+.banner:not(.stop) .kpi.neg b{color:var(--bad)}
+.banner ul{margin:6px 0 0;padding-left:18px;font-size:13px}
+.banner .lbl{font-weight:800;font-size:12px;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+/* meters */
+.meter{margin:12px 0}
+.meter-head{display:flex;align-items:baseline;gap:8px}
+.meter-head b{font-size:15px}
+.meter-head .left{margin-left:auto;font-weight:800;font-size:18px}
+.meter-head .left.ok{color:var(--ok)}.meter-head .left.warn{color:var(--warn)}.meter-head .left.over,.meter-head .left.blocked{color:var(--bad)}
+.bar{height:12px;background:var(--track);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.bar span{display:block;height:100%;border-radius:999px;background:var(--ok);transition:width .2s}
+.bar span.warn{background:var(--warn)}.bar span.over,.bar span.blocked{background:var(--bad)}.bar span.none{background:var(--muted)}
+.meter-sub{font-size:13px;color:var(--muted)}
+details summary{cursor:pointer;font-size:13px;color:var(--accent);margin-top:4px}
+.caplist{list-style:none;margin:6px 0 0;padding:0;font-size:13px}
+.caplist li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.caplist li.bind{font-weight:700;color:var(--text)}
+/* rate */
+.rate-big{display:flex;gap:10px;margin-top:10px}
+.rate-big>div{flex:1;background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.rate-big b{display:block;font-size:26px}
+.rate-big span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+table.kv{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+table.kv td{padding:6px 0;border-bottom:1px solid var(--line)}
+table.kv td:last-child{text-align:right;font-weight:600;white-space:nowrap}
+.stepper{display:flex;gap:6px}
+.stepper .btn{min-width:48px;min-height:48px;font-size:20px}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;padding:8px 0;min-height:44px;cursor:pointer}
+.check input{width:24px;height:24px;min-height:0;flex:none}
+/* products */
+.prod{display:grid;grid-template-columns:minmax(0,1fr) 112px 40px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.prod .meta{grid-column:1/-1;display:flex;gap:6px;align-items:center;margin-top:-2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.totals{display:flex;gap:8px;margin-top:10px}
+.totals>div{flex:1;background:var(--bg);border-radius:10px;padding:8px;text-align:center;font-size:13px;color:var(--muted)}
+.totals b{display:block;font-size:17px;color:var(--text)}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+fieldset:disabled .prod,fieldset:disabled .chips{opacity:.4}
+/* lists */
+.item{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .grow{flex:1;min-width:0}
+.item .title{font-weight:700}
+.rt{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) 30px;gap:4px;align-items:center;margin-bottom:6px}
+.rt input{padding:8px 4px;min-height:44px;font-size:16px;text-align:center}
+.rt .x{font-size:18px}
+.rt.head{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.kv2{display:grid;grid-template-columns:1fr 110px 40px;gap:6px;align-items:center;margin-bottom:6px}
+.x{border:0;background:none;color:var(--bad);font-size:22px;cursor:pointer;min-height:44px}
+.fab{position:fixed;right:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:25;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.sample-ribbon{font-size:12px;font-weight:700;color:var(--warn)}
+</style>
+</head>
+<body>
+<header class="app">
+  <h1>Deal Calc<small>F&amp;I product room, fast</small></h1>
+  <nav class="tabs"><a href="#/deals" id="tab-deals">Deals</a><a href="#/banks" id="tab-banks">Banks</a></nav>
+</header>
+<main id="app"></main>
+<script id="calc">
+// ==CALC-START==
+// Pure calculation functions. No DOM, no storage. Unit tested by tests/calc.test.js,
+// which extracts the text between the CALC-START / CALC-END markers.
+const Calc = (() => {
+  const PRODUCT_TYPES = [
+    { key: 'warranty',    short: 'Warranty / VSC', label: 'Warranty / service contract', defaultBucket: 'back' },
+    { key: 'gap',         short: 'GAP',            label: 'GAP insurance',               defaultBucket: 'back' },
+    { key: 'maintenance', short: 'Maintenance',    label: 'Prepaid maintenance',         defaultBucket: 'back' },
+    { key: 'tirewheel',   short: 'Tire & wheel',   label: 'Tire & wheel',                defaultBucket: 'back' },  // varies by bank: set on rate sheet
+    { key: 'glass',       short: 'Glass',          label: 'Glass coverage',              defaultBucket: 'back' },  // varies by bank: set on rate sheet
+    { key: 'resistall',   short: 'Resistall',      label: 'Resistall sealant',           defaultBucket: 'front' }
+  ];
+  const STALE_DAYS = 35;
+
+  function num(v) {
+    if (v === null || v === undefined || v === '') return null;
+    const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/[$,%\s]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  }
+  const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+  const r3 = n => Math.round((n + Number.EPSILON) * 1000) / 1000;
+  function daysBetween(a, b) {
+    const A = Date.parse(a + 'T00:00:00Z'), B = Date.parse(b + 'T00:00:00Z');
+    if (isNaN(A) || isNaN(B)) return null;
+    return Math.round((B - A) / 86400000);
+  }
+
+  // Which book value applies: new = MSRP (Toyota); used = KBB bank or credit-union value per lender type.
+  function bookValueFor(deal) {
+    const b = (deal && deal.book) || {};
+    if (num(b.override) != null) return { value: num(b.override), source: 'Manual override' };
+    if (deal.condition === 'new') return { value: num(b.msrp), source: 'MSRP (Toyota)' };
+    if (deal.lenderType === 'cu') return { value: num(b.kbbCU), source: 'KBB credit-union value' };
+    return { value: num(b.kbbBank), source: 'KBB bank value' };
+  }
+
+  // Max financing = book × LTV% − already financed.
+  function maxFinancing(book, ltvPct, alreadyFinanced) {
+    const bk = num(book), l = num(ltvPct);
+    if (bk == null || l == null) return null;
+    const maxTotal = r2(bk * l / 100);
+    return { maxTotal, room: r2(maxTotal - (num(alreadyFinanced) || 0)) };
+  }
+
+  // A cap definition { dollar, pct, pctBase: 'price'|'book' } -> candidate list.
+  function capCandidates(source, def, bases) {
+    const out = [];
+    if (!def) return out;
+    const d = num(def.dollar), p = num(def.pct);
+    if (d != null) out.push({ value: r2(d), label: source + ': $' + d.toLocaleString('en-US'), kind: 'dollar' });
+    if (p != null) {
+      const key = def.pctBase === 'book' ? 'book' : 'price';
+      const baseName = key === 'book' ? 'book value' : 'purchase price';
+      const base = num(bases && bases[key]);
+      if (base != null) out.push({ value: r2(base * p / 100), label: source + ': ' + p + '% of ' + baseName, kind: 'pct' });
+      else out.push({ value: null, label: source + ': ' + p + '% of ' + baseName + ' (enter ' + baseName + ')', kind: 'pct', missing: true });
+    }
+    return out;
+  }
+
+  // When several caps exist (e.g. $8,500 or 30% of price), the LOWER one wins.
+  function lowerCap(candidates) {
+    let best = null;
+    for (const c of candidates || []) {
+      if (c.value == null) continue;
+      if (!best || c.value < best.value) best = c;
+    }
+    return best;
+  }
+
+  // Rate table: rows { yearMin, yearMax, A, B, C }; blank bound = open-ended.
+  function rateLookup(sheet, year, tier) {
+    const y = num(year);
+    if (!sheet || !Array.isArray(sheet.rates) || y == null) return null;
+    for (const row of sheet.rates) {
+      const lo = num(row.yearMin), hi = num(row.yearMax);
+      if ((lo == null || y >= lo) && (hi == null || y <= hi)) {
+        const v = num(row[tier]);
+        return v == null ? null : { rate: v, row };
+      }
+    }
+    return null;
+  }
+
+  // Credit unions: no hold. Banks: lower of approval holdable points and rate-sheet max hold.
+  function holdLimit(lenderType, approval, sheet) {
+    if (lenderType === 'cu') return { max: 0, reason: 'Credit union: no rate hold' };
+    const lims = [];
+    const a = num(approval && approval.holdablePts), s = num(sheet && sheet.maxHold);
+    if (a != null) lims.push({ max: a, reason: 'Approval holdable points' });
+    if (s != null) lims.push({ max: s, reason: 'Rate sheet max hold' });
+    if (!lims.length) return { max: null, reason: 'No hold limit entered' };
+    return lims.reduce((m, l) => (l.max < m.max ? l : m));
+  }
+
+  function clampHold(requested, limit) {
+    const req = Math.max(0, num(requested) || 0);
+    let hold = req, clamped = false;
+    if (limit && limit.max != null && hold > limit.max) { hold = limit.max; clamped = true; }
+    return { hold: r3(hold), requested: req, clamped };
+  }
+
+  // Optional LTV tiers on a sheet: [{ above: 115, bump: 0.5 }] => above 115% LTV add +0.5%.
+  function ltvBump(sheet, ltvPct) {
+    const none = { bump: 0, tier: null };
+    if (ltvPct == null || !sheet || !Array.isArray(sheet.ltvTiers)) return none;
+    let best = null;
+    for (const t of sheet.ltvTiers) {
+      const a = num(t.above), b = num(t.bump);
+      if (a == null || b == null) continue;
+      if (ltvPct > a && (!best || a > best.above)) best = { above: a, bump: b };
+    }
+    return best ? { bump: best.bump, tier: best } : none;
+  }
+
+  // Next LTV tier not yet crossed, and dollars of product until crossing it.
+  function nextLtvTier(sheet, book, totalFinanced) {
+    const bk = num(book);
+    if (!sheet || !Array.isArray(sheet.ltvTiers) || !bk) return null;
+    const ltv = totalFinanced / bk * 100;
+    let next = null;
+    for (const t of sheet.ltvTiers) {
+      const a = num(t.above), b = num(t.bump);
+      if (a == null || b == null || ltv > a) continue;
+      if (!next || a < next.above) next = { above: a, bump: b };
+    }
+    if (!next) return null;
+    return { ...next, dollarsUntil: r2(bk * next.above / 100 - totalFinanced) };
+  }
+
+  // Signed = base (approval) + hold. Effective = signed + LTV bump − enabled discounts.
+  function rateBreakdown({ baseRate, hold, discounts, bump }) {
+    const base = num(baseRate);
+    if (base == null) return null;
+    const h = num(hold) || 0, bp = num(bump) || 0;
+    const disc = (discounts || []).reduce((s, d) => s + (num(d.pct) || 0), 0);
+    const signed = r3(base + h);
+    return { base, hold: h, signed, bump: bp, discount: r3(disc), effective: r3(signed + bp - disc) };
+  }
+
+  // Rate sheet's product mapping overrides the default front/back classification.
+  function bucketFor(type, sheet) {
+    const m = sheet && sheet.productMap;
+    if (m && (m[type] === 'front' || m[type] === 'back')) return m[type];
+    const p = PRODUCT_TYPES.find(x => x.key === type);
+    return p ? p.defaultBucket : 'back';
+  }
+
+  function tally(products, sheet, blocked) {
+    const t = { front: 0, back: 0, total: 0, count: 0, blocked: !!blocked };
+    if (blocked) return t;
+    for (const p of products || []) {
+      const v = num(p.price);
+      if (v == null) continue;
+      const b = bucketFor(p.type, sheet);
+      t[b] = r2(t[b] + v); t.total = r2(t.total + v); t.count++;
+    }
+    return t;
+  }
+
+  function barState(used, cap) {
+    if (cap == null) return 'none';
+    if (cap <= 0) return used > 0 ? 'over' : 'blocked';
+    const r = used / cap;
+    return r > 1.000001 ? 'over' : r >= 0.85 ? 'warn' : 'ok';
+  }
+
+  function newestSheet(bank) {
+    return ((bank && bank.sheets) || []).reduce(
+      (m, s) => (!m || String(s.effectiveDate || '') > String(m.effectiveDate || '') ? s : m), null);
+  }
+
+  // "Is this the current rate sheet?" warning: not the newest for the bank, or older than ~35 days.
+  function sheetCurrency(bank, sheet, today) {
+    if (!sheet) return { warn: true, isNewest: false, ageDays: null, newest: null, messages: ['No rate sheet selected'] };
+    const newest = newestSheet(bank);
+    const isNewest = !newest || newest.id === sheet.id || newest.effectiveDate === sheet.effectiveDate;
+    const age = sheet.effectiveDate ? daysBetween(sheet.effectiveDate, today) : null;
+    const msgs = [];
+    if (!isNewest) msgs.push('A newer sheet exists (effective ' + newest.effectiveDate + ')');
+    if (age == null) msgs.push('Sheet has no effective date');
+    else if (age > STALE_DAYS) msgs.push('Sheet is ' + age + ' days old (over ' + STALE_DAYS + ')');
+    else if (age < 0) msgs.push('Sheet is not effective until ' + sheet.effectiveDate);
+    return { warn: msgs.length > 0, isNewest, ageDays: age, newest, messages: msgs };
+  }
+
+  function computeDeal(deal, bank, sheet, today) {
+    const ap = deal.approval || {};
+    const book = bookValueFor(deal);
+    const price = num(deal.purchasePrice);
+    const financed = num(deal.amountFinanced) || 0;
+
+    const sheetLtv = num(sheet && sheet.ltvPct), apLtv = num(ap.maxLtvPct);
+    let ltvPct = null, ltvSource = null;
+    if (apLtv != null && (sheetLtv == null || apLtv <= sheetLtv)) { ltvPct = apLtv; ltvSource = 'Approval max LTV'; }
+    else if (sheetLtv != null) { ltvPct = sheetLtv; ltvSource = 'Rate sheet LTV'; }
+    const mf = maxFinancing(book.value, ltvPct, financed);
+
+    const blocked = !!ap.noProducts;
+    const t = tally(deal.products, sheet, blocked);
+    const bases = { price, book: book.value };
+
+    const frontC = capCandidates('Sheet front allowance', sheet && sheet.frontAllowance, bases)
+      .concat(capCandidates('Approval front cap', ap.frontCap, bases));
+    const backC = capCandidates('Sheet back allowance', sheet && sheet.backAllowance, bases)
+      .concat(capCandidates('Approval back cap', ap.backCap, bases));
+    if (blocked) { frontC.push({ value: 0, label: 'Approval: no products allowed', kind: 'stop' }); backC.push({ value: 0, label: 'Approval: no products allowed', kind: 'stop' }); }
+    if (ap.noFront) frontC.push({ value: 0, label: 'Approval: no front-end products', kind: 'stop' });
+    if (ap.noBack) backC.push({ value: 0, label: 'Approval: no back-end products', kind: 'stop' });
+    const frontCap = lowerCap(frontC), backCap = lowerCap(backC);
+    const front = { used: t.front, cap: frontCap ? frontCap.value : null, binding: frontCap, candidates: frontC,
+      remaining: frontCap ? r2(frontCap.value - t.front) : null, state: barState(t.front, frontCap ? frontCap.value : null) };
+    const back = { used: t.back, cap: backCap ? backCap.value : null, binding: backCap, candidates: backC,
+      remaining: backCap ? r2(backCap.value - t.back) : null, state: barState(t.back, backCap ? backCap.value : null) };
+
+    const totalFinanced = r2(financed + t.total);
+    const ltvActual = book.value ? r2(totalFinanced / book.value * 100) : null;
+    const ltvBase = book.value ? r2(financed / book.value * 100) : null;
+    const ltv = { pct: ltvPct, source: ltvSource, maxTotal: mf ? mf.maxTotal : null, roomBeforeProducts: mf ? mf.room : null,
+      remaining: mf ? r2(mf.room - t.total) : null, totalFinanced, ltvActual, ltvBase,
+      state: barState(totalFinanced, mf ? mf.maxTotal : null), next: nextLtvTier(sheet, book.value, totalFinanced) };
+
+    const sheetRate = rateLookup(sheet, deal.vehicleYear, deal.tier || 'A');
+    const apRate = num(ap.approvedRate);
+    const baseRate = apRate != null ? apRate : (sheetRate ? sheetRate.rate : null);
+    const limit = holdLimit(deal.lenderType, ap, sheet);
+    const hc = clampHold(deal.hold, limit);
+    const discounts = ((sheet && sheet.discounts) || []).filter(d => (deal.discountsOn || []).includes(d.id));
+    const bump = ltvBump(sheet, ltvActual);
+    const rate = rateBreakdown({ baseRate, hold: hc.hold, discounts, bump: bump.bump });
+
+    const currency = sheetCurrency(bank, sheet, today);
+    const lenderMismatch = bank && bank.type && deal.lenderType && bank.type !== deal.lenderType;
+
+    const stops = [];
+    if (blocked) stops.push('No products allowed');
+    if (ap.noFront && !blocked) stops.push('No front-end products');
+    if (ap.noBack && !blocked) stops.push('No back-end products');
+    const violations = [];
+    const money = n => '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    if (!blocked && front.remaining != null && front.remaining < 0) violations.push('Front-end over cap by ' + money(front.remaining));
+    if (!blocked && back.remaining != null && back.remaining < 0) violations.push('Back-end over cap by ' + money(back.remaining));
+    if (blocked && (deal.products || []).some(p => num(p.price))) violations.push('Products entered but approval allows none (ignored)');
+    if (ltv.remaining != null && ltv.remaining < 0) violations.push('Over max LTV by ' + money(ltv.remaining) + ' — rate or approval can change');
+    if (hc.clamped) violations.push('Hold capped at ' + limit.max + ' pts (' + limit.reason + ')');
+    const warnings = [];
+    if (bump.bump > 0) warnings.push('LTV ' + ltvActual + '% is above ' + bump.tier.above + '% — rate bump +' + bump.bump + '%');
+    if (ltv.next && ltv.next.dollarsUntil >= 0) warnings.push(money(ltv.next.dollarsUntil) + ' more product pushes LTV past ' + ltv.next.above + '% (+' + ltv.next.bump + '% rate)');
+    if (currency.warn && !deal.sheetOverride) warnings.push('Rate sheet check: ' + currency.messages.join('; '));
+    else if (!currency.warn && !deal.sheetConfirmed) warnings.push('Confirm this is the current rate sheet');
+    if (book.value == null) warnings.push('Enter the ' + book.source);
+    if (baseRate == null) warnings.push('No rate: enter approval rate or check sheet year/tier');
+    if (lenderMismatch) warnings.push('Lender type does not match the selected ' + (bank.type === 'cu' ? 'credit union' : 'bank'));
+
+    return { book, price, financed, tally: t, front, back, ltv, sheetRate, apRate, baseRate,
+      baseSource: apRate != null ? 'Approval' : (sheetRate ? 'Rate sheet' : null),
+      holdLimit: limit, hold: hc, discounts, bump, rate, currency, stops, violations, warnings, blocked };
+  }
+
+  return { PRODUCT_TYPES, STALE_DAYS, num, r2, r3, daysBetween, bookValueFor, maxFinancing, capCandidates, lowerCap,
+    rateLookup, holdLimit, clampHold, ltvBump, nextLtvTier, rateBreakdown, bucketFor, tally, barState,
+    newestSheet, sheetCurrency, computeDeal };
+})();
+// ==CALC-END==
+</script>
+<script id="extract">
+// ==EXTRACT-START==
+// PDF extraction STUBS. Placeholders until Carly sends sample PDFs.
+// Each returns the same shape a real parser will return; null = "not found, enter manually".
+// To add real parsing: load pdf.js (window.pdfjsLib) or another parser, then fill these in.
+async function readPdfText(file) {
+  if (!window.pdfjsLib) return '';                       // no parser bundled yet; app works without it
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const c = await page.getTextContent();
+    text += c.items.map(it => it.str).join(' ') + '\n';
+  }
+  return text;
+}
+// KBB or Toyota printout -> { kbbBank, kbbCU, msrp }
+async function extractBookValues(file) {
+  const text = await readPdfText(file).catch(() => '');
+  return { placeholder: true, fileName: file.name, textLength: text.length, kbbBank: null, kbbCU: null, msrp: null };
+}
+// Bank rate sheet -> partial RateSheet (see DATA_MODEL.md)
+async function extractRateSheet(file) {
+  const text = await readPdfText(file).catch(() => '');
+  return { placeholder: true, fileName: file.name, textLength: text.length, sheet: {} };
+}
+// Per-deal approval -> partial Approval
+async function extractApproval(file) {
+  const text = await readPdfText(file).catch(() => '');
+  return { placeholder: true, fileName: file.name, textLength: text.length, approval: {} };
+}
+// ==EXTRACT-END==
+</script>
+<script id="app-js">
+(() => {
+'use strict';
+const KEY = 'carlyDealCalc.v1';
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const N = Calc.num;
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function monthStart(offset) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + offset); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; }
+function money(n) { if (n == null || isNaN(n)) return '—'; const neg = n < 0; const a = Math.abs(n); return (neg ? '−' : '') + '$' + a.toLocaleString('en-US', { minimumFractionDigits: a % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
+function pct(n) { if (n == null || isNaN(n)) return '—'; return (+n.toFixed(3)).toString() + '%'; }
+function monthLabel(iso) { if (!iso) return 'No date'; const [y, m] = iso.split('-'); return new Date(+y, +m - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }); }
+const PT = Calc.PRODUCT_TYPES;
+const ptLabel = k => (PT.find(p => p.key === k) || { label: k }).label;
+
+// ---------- state ----------
+let db;
+function blankSheet(type) {
+  return { id: uid(), effectiveDate: monthStart(0), label: '', ltvPct: '120',
+    frontAllowance: { dollar: '', pct: '', pctBase: 'price' }, backAllowance: { dollar: '', pct: '', pctBase: 'price' },
+    productMap: { warranty: 'back', gap: 'back', maintenance: 'back', tirewheel: 'back', glass: 'back', resistall: 'front' },
+    rates: [{ yearMin: '', yearMax: '', A: '', B: '', C: '' }], maxHold: type === 'cu' ? '' : '2',
+    discounts: [], ltvTiers: [], specialConditions: '', sourceFile: '' };
+}
+function seed() {
+  const bankSheetNow = Object.assign(blankSheet('bank'), { id: 'sheet-demo-bank-now', effectiveDate: monthStart(0), label: 'SAMPLE sheet', ltvPct: '125',
+    frontAllowance: { dollar: '2500', pct: '10', pctBase: 'price' }, backAllowance: { dollar: '8500', pct: '30', pctBase: 'price' },
+    productMap: { warranty: 'back', gap: 'back', maintenance: 'back', tirewheel: 'front', glass: 'front', resistall: 'front' },
+    rates: [{ yearMin: '2024', yearMax: '', A: '6.49', B: '8.99', C: '12.49' }, { yearMin: '2020', yearMax: '2023', A: '6.99', B: '9.49', C: '12.99' }, { yearMin: '', yearMax: '2019', A: '7.99', B: '10.49', C: '13.99' }],
+    maxHold: '2', discounts: [{ id: 'd-autopay', label: 'Auto-pay + e-statements', pct: '0.5' }],
+    ltvTiers: [{ above: '115', bump: '0.5' }], specialConditions: 'SAMPLE: Max term 72 mo on 2018 and older. T&W counts front-end with this bank.' });
+  const bankSheetOld = Object.assign(clone(bankSheetNow), { id: 'sheet-demo-bank-old', effectiveDate: monthStart(-1), label: 'SAMPLE sheet (last month)', maxHold: '2.5' });
+  const cuSheet = Object.assign(blankSheet('cu'), { id: 'sheet-demo-cu-now', effectiveDate: monthStart(0), label: 'SAMPLE sheet', ltvPct: '120',
+    frontAllowance: { dollar: '1500', pct: '', pctBase: 'price' }, backAllowance: { dollar: '5000', pct: '20', pctBase: 'book' },
+    rates: [{ yearMin: '2022', yearMax: '', A: '5.49', B: '6.99', C: '9.99' }, { yearMin: '', yearMax: '2021', A: '5.99', B: '7.49', C: '10.49' }],
+    maxHold: '', discounts: [{ id: 'd-cu-autopay', label: 'Auto-pay from CU checking', pct: '0.25' }],
+    specialConditions: 'SAMPLE: Credit union — no rate hold. GAP must be the CU\'s own GAP.' });
+  const bank = { id: 'bank-demo', name: 'SAMPLE Demo Bank', type: 'bank', sample: true, sheets: [bankSheetNow, bankSheetOld] };
+  const cu = { id: 'cu-demo', name: 'SAMPLE Demo Credit Union', type: 'cu', sample: true, sheets: [cuSheet] };
+  const deal = { id: 'deal-demo', sample: true, name: 'SAMPLE deal — 2022 Camry SE', createdAt: Date.now(), updatedAt: Date.now(),
+    condition: 'used', vehicleYear: '2022', lenderType: 'bank', bankId: bank.id, sheetId: bankSheetNow.id, sheetConfirmed: true, sheetOverride: false,
+    tier: 'A', purchasePrice: '28000', amountFinanced: '26500',
+    book: { kbbBank: '25000', kbbCU: '24000', msrp: '', override: '', sourceFile: '' },
+    approval: { approvedRate: '8', holdablePts: '2', frontCap: { dollar: '', pct: '' }, backCap: { dollar: '', pct: '' }, maxLtvPct: '', noProducts: false, noFront: false, noBack: false, restrictions: 'SAMPLE: Proof of income required', sourceFile: '' },
+    hold: '2', discountsOn: ['d-autopay'],
+    products: [{ id: uid(), type: 'warranty', price: '2995' }, { id: uid(), type: 'gap', price: '895' }, { id: uid(), type: 'resistall', price: '699' }] };
+  return { version: 1, banks: [bank, cu], deals: [deal] };
+}
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (d && d.version === 1) return d; } } catch (e) { console.warn(e); }
+  return seed();
+}
+let saveTimer = null;
+function saveNow() { clearTimeout(saveTimer); saveTimer = null; try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { alert('Could not save: ' + e.message); } }
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 250); }
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+
+const findBank = id => db.banks.find(b => b.id === id);
+const findDeal = id => db.deals.find(d => d.id === id);
+function sheetsSorted(bank) { return ((bank && bank.sheets) || []).slice().sort((a, b) => String(b.effectiveDate || '').localeCompare(String(a.effectiveDate || ''))); }
+function dealCtx(deal) { const bank = findBank(deal.bankId); const sheet = bank ? bank.sheets.find(s => s.id === deal.sheetId) : null; return { bank, sheet }; }
+function compute(deal) { const { bank, sheet } = dealCtx(deal); return Calc.computeDeal(deal, bank, sheet, todayISO()); }
+function newDeal() {
+  const bank = db.banks.find(b => b.type === 'bank') || db.banks[0];
+  const sheet = bank ? sheetsSorted(bank)[0] : null;
+  return { id: uid(), name: '', createdAt: Date.now(), updatedAt: Date.now(), condition: 'used', vehicleYear: '', lenderType: bank ? bank.type : 'bank',
+    bankId: bank ? bank.id : '', sheetId: sheet ? sheet.id : '', sheetConfirmed: false, sheetOverride: false, tier: 'A', purchasePrice: '', amountFinanced: '',
+    book: { kbbBank: '', kbbCU: '', msrp: '', override: '', sourceFile: '' },
+    approval: { approvedRate: '', holdablePts: '', frontCap: { dollar: '', pct: '' }, backCap: { dollar: '', pct: '' }, maxLtvPct: '', noProducts: false, noFront: false, noBack: false, restrictions: '', sourceFile: '' },
+    hold: '', discountsOn: [], products: [] };
+}
+
+// ---------- path helpers ----------
+function getPath(o, p) { return p.split('.').reduce((a, k) => (a == null ? a : a[k]), o); }
+function setPath(o, p, v) { const ks = p.split('.'); let a = o; for (let i = 0; i < ks.length - 1; i++) { if (a[ks[i]] == null) a[ks[i]] = {}; a = a[ks[i]]; } a[ks[ks.length - 1]] = v; }
+function ctxObj(el) {
+  const c = el.closest('[data-ctx]'); if (!c) return null;
+  if (c.dataset.ctx === 'deal') return findDeal(c.dataset.id);
+  if (c.dataset.ctx === 'bank') return findBank(c.dataset.id);
+  if (c.dataset.ctx === 'sheet') { const b = findBank(c.dataset.bank); return b && b.sheets.find(s => s.id === c.dataset.id); }
+  return null;
+}
+
+// ---------- field builders ----------
+function numField(label, path, obj, opts = {}) {
+  const v = getPath(obj, path);
+  return `<label class="f ${opts.cls || ''}">${esc(label)}<input data-path="${path}" inputmode="decimal" autocomplete="off" placeholder="${esc(opts.ph || '')}" value="${esc(v)}" ${opts.dis ? 'disabled' : ''}></label>`;
+}
+function textField(label, path, obj, opts = {}) {
+  const v = getPath(obj, path);
+  return `<label class="f ${opts.cls || ''}">${esc(label)}<input data-path="${path}" type="${opts.type || 'text'}" placeholder="${esc(opts.ph || '')}" value="${esc(v)}"></label>`;
+}
+function seg(path, obj, options, rerender = true) {
+  const v = getPath(obj, path);
+  return `<div class="seg">${options.map(([val, lab]) => `<button type="button" data-seg="${path}" data-val="${val}" ${rerender ? 'data-rerender' : ''} class="${v === val ? 'on' : ''}">${esc(lab)}</button>`).join('')}</div>`;
+}
+function check(label, path, obj, rerender) { return `<label class="check"><input type="checkbox" data-path="${path}" ${getPath(obj, path) ? 'checked' : ''} ${rerender ? 'data-rerender' : ''}>${esc(label)}</label>`; }
+
+// ---------- views ----------
+let view = { name: 'deals' };
+function route() {
+  const h = location.hash.replace(/^#\/?/, '').split('/');
+  if (h[0] === 'deal' && findDeal(h[1])) view = { name: 'deal', id: h[1] };
+  else if (h[0] === 'banks') view = { name: 'banks' };
+  else if (h[0] === 'sheet' && findBank(h[1])) view = { name: 'sheet', bank: h[1], id: h[2] };
+  else view = { name: 'deals' };
+  $('#tab-deals').classList.toggle('on', view.name === 'deals' || view.name === 'deal');
+  $('#tab-banks').classList.toggle('on', view.name === 'banks' || view.name === 'sheet');
+  render(); window.scrollTo(0, 0);
+}
+function render() {
+  const app = $('#app');
+  if (view.name === 'deal') app.innerHTML = dealView(findDeal(view.id));
+  else if (view.name === 'banks') app.innerHTML = banksView();
+  else if (view.name === 'sheet') app.innerHTML = sheetView();
+  else app.innerHTML = dealsView();
+  if (view.name === 'deal') refresh();
+}
+
+function dealsView() {
+  const deals = db.deals.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  return `<div class="card"><h2>Deals <span class="spacer"></span><button class="btn primary" data-action="new-deal">+ New deal</button></h2>
+  ${deals.length ? deals.map(d => { const c = compute(d); const b = findBank(d.bankId);
+    return `<div class="item"><div class="grow"><div class="title">${esc(d.name || 'Untitled deal')} ${d.sample ? '<span class="tag sample">Sample</span>' : ''}</div>
+      <div class="small muted">${esc([d.condition === 'new' ? 'New' : 'Used', d.vehicleYear, b ? b.name : 'No bank', 'Tier ' + (d.tier || '—')].filter(Boolean).join(' · '))}</div>
+      <div class="small">Products ${money(c.tally.total)} · FE left ${money(c.front.remaining)} · BE left ${money(c.back.remaining)} · LTV room ${money(c.ltv.remaining)}</div>
+      ${c.stops.length || c.violations.length ? `<div class="small" style="color:var(--bad);font-weight:700">⛔ ${esc(c.stops.concat(c.violations).join(' · '))}</div>` : ''}</div>
+      <div class="row" style="flex-direction:column;align-items:stretch"><a class="btn sm primary" href="#/deal/${d.id}">Open</a><button class="btn sm" data-action="dup-deal" data-id="${d.id}">Duplicate</button><button class="btn sm danger" data-action="del-deal" data-id="${d.id}">Delete</button></div></div>`; }).join('')
+  : '<p class="muted">No deals yet.</p>'}</div>
+  <p class="small muted">Everything is saved on this device only (browser storage). Use Banks → Backup to export a copy.</p>`;
+}
+
+function dealView(d) {
+  const { bank, sheet } = dealCtx(d);
+  const banks = db.banks.filter(b => b.type === d.lenderType);
+  const bankOpts = (banks.length ? banks : db.banks);
+  const sheets = sheetsSorted(bank);
+  const newestId = sheets[0] && sheets[0].id;
+  const blocked = !!(d.approval && d.approval.noProducts);
+  return `<div data-ctx="deal" data-id="${d.id}">
+  <div id="banner"></div>
+  ${d.sample ? '<div class="note warn small" style="margin-top:10px">SAMPLE DATA — demo deal so the screens are not empty. Duplicate it or start a new deal.</div>' : ''}
+  <div class="deal-cols"><div>
+  <section class="card"><h2>Deal basics</h2>
+    <div class="grid">
+      ${textField('Deal / customer', 'name', d, { cls: 'full', ph: 'e.g. Smith — 2022 Camry' })}
+      <div class="f full"><label class="f">Vehicle</label>${seg('condition', d, [['used', 'Used (KBB)'], ['new', 'New (MSRP)']])}</div>
+      ${numField('Vehicle year', 'vehicleYear', d, { ph: '2022' })}
+      <div class="f"><label class="f">Approval tier</label>${seg('tier', d, [['A', 'A'], ['B', 'B'], ['C', 'C']])}</div>
+      <div class="f full"><label class="f">Lender type (picks KBB value, hold rules)</label>${seg('lenderType', d, [['bank', 'Bank'], ['cu', 'Credit union']])}</div>
+      <label class="f full">${d.lenderType === 'cu' ? 'Credit union' : 'Bank'}
+        <select data-path="bankId" data-rerender>${bankOpts.length ? '' : '<option value="">Add a bank first</option>'}${bankOpts.map(b => `<option value="${b.id}" ${b.id === d.bankId ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}</select></label>
+      <label class="f full">Rate sheet
+        <select data-path="sheetId" data-rerender>${sheets.length ? '' : '<option value="">No sheets — add in Banks</option>'}${sheets.map(s => `<option value="${s.id}" ${s.id === d.sheetId ? 'selected' : ''}>${esc(monthLabel(s.effectiveDate))} · eff ${esc(s.effectiveDate || '?')}${s.id === newestId ? ' (newest)' : ''}${s.label ? ' — ' + esc(s.label) : ''}</option>`).join('')}</select></label>
+      <div class="full" id="sheetCheck"></div>
+      ${numField('Purchase price', 'purchasePrice', d, { ph: '$' })}
+      ${numField('Amount financed (before products)', 'amountFinanced', d, { ph: '$' })}
+    </div>
+  </section>
+  <section class="card"><h2>Book value</h2>
+    <div class="row"><label class="btn sm">📄 Upload KBB / Toyota PDF<input type="file" accept="application/pdf,.pdf" data-upload="book" hidden></label>
+      ${d.book.sourceFile ? `<span class="small muted">${esc(d.book.sourceFile)}</span>` : ''}</div>
+    <div id="bookNote"></div>
+    <div class="grid" style="margin-top:8px">
+      ${numField('KBB — bank value', 'book.kbbBank', d, { ph: '$' })}
+      ${numField('KBB — credit union value', 'book.kbbCU', d, { ph: '$' })}
+      ${numField('MSRP (Toyota, new)', 'book.msrp', d, { ph: '$' })}
+      ${numField('Override (optional)', 'book.override', d, { ph: '$' })}
+    </div>
+    <div id="bookOut"></div>
+  </section>
+  <section class="card" style="border-color:var(--bad)"><h2 style="color:var(--bad)">Bank approval — hard stops</h2>
+    <div class="row"><label class="btn sm">📄 Upload approval PDF<input type="file" accept="application/pdf,.pdf" data-upload="approval" hidden></label>
+      ${d.approval.sourceFile ? `<span class="small muted">${esc(d.approval.sourceFile)}</span>` : ''}</div>
+    <div id="approvalNote"></div>
+    <div class="grid" style="margin-top:8px">
+      ${numField('Approved rate %', 'approval.approvedRate', d, { ph: '8.00' })}
+      ${numField('Points she can hold', 'approval.holdablePts', d, { ph: d.lenderType === 'cu' ? 'CU: none' : '2', dis: d.lenderType === 'cu' })}
+      ${numField('Back-end max $', 'approval.backCap.dollar', d, { ph: '$' })}
+      ${numField('Back-end max % of price', 'approval.backCap.pct', d, { ph: '%' })}
+      ${numField('Front-end max $', 'approval.frontCap.dollar', d, { ph: '$' })}
+      ${numField('Front-end max % of price', 'approval.frontCap.pct', d, { ph: '%' })}
+      ${numField('Max LTV % (if stated)', 'approval.maxLtvPct', d, { ph: '%' })}
+    </div>
+    ${check("Can't sell anything (no products)", 'approval.noProducts', d, true)}
+    ${check('No front-end products', 'approval.noFront', d, false)}
+    ${check('No back-end products', 'approval.noBack', d, false)}
+    <label class="f">Other restrictions / conditions<textarea data-path="approval.restrictions" placeholder="e.g. POI required, max term 72">${esc(d.approval.restrictions)}</textarea></label>
+  </section>
+  </div><div>
+  <section class="card"><h2>Rate</h2>
+    <label class="f">Hold (points above approval)</label>
+    <div class="stepper"><button class="btn" data-action="hold" data-step="-0.25" ${d.lenderType === 'cu' ? 'disabled' : ''}>−</button>
+      <input id="holdInput" data-path="hold" inputmode="decimal" value="${esc(d.hold)}" placeholder="0" ${d.lenderType === 'cu' ? 'disabled' : ''} style="text-align:center">
+      <button class="btn" data-action="hold" data-step="0.25" ${d.lenderType === 'cu' ? 'disabled' : ''}>+</button></div>
+    ${sheet && sheet.discounts && sheet.discounts.length ? `<div style="margin-top:8px">${sheet.discounts.map(x => `<label class="check"><input type="checkbox" data-discount="${x.id}" ${(d.discountsOn || []).includes(x.id) ? 'checked' : ''}>${esc(x.label)} (−${esc(x.pct)}%)</label>`).join('')}</div>` : '<p class="small muted">No conditional discounts on this sheet.</p>'}
+    <div id="rateOut"></div>
+  </section>
+  <section class="card"><h2>Caps &amp; remaining</h2><div id="capsOut"></div></section>
+  <section class="card"><h2>Products</h2>
+    ${blocked ? '<div class="note bad"><b>Approval says no products.</b> Entry is locked and totals are zeroed.</div>' : ''}
+    <fieldset ${blocked ? 'disabled' : ''}>
+    ${(d.products || []).map((p, i) => { const bk = Calc.bucketFor(p.type, sheet); return `<div class="prod">
+      <select data-path="products.${i}.type" data-rerender aria-label="Product">${PT.map(t => `<option value="${t.key}" ${t.key === p.type ? 'selected' : ''}>${esc(t.short)}</option>`).join('')}</select>
+      <input data-path="products.${i}.price" inputmode="decimal" placeholder="$ price" value="${esc(p.price)}" aria-label="Price" ${i === (d.products.length - 1) ? 'id="lastPrice"' : ''}>
+      <button class="x" data-action="del-prod" data-i="${i}" aria-label="Remove">✕</button>
+      <div class="meta"><span class="tag ${bk}">${bk === 'front' ? 'Front-end · non-cancelable' : 'Back-end · cancelable'}</span></div></div>`; }).join('') || '<p class="muted small">No products yet — tap one below.</p>'}
+    <div class="chips">${PT.map(t => `<button class="btn sm" data-action="add-prod" data-type="${t.key}">+ ${esc(t.short)}</button>`).join('')}</div>
+    </fieldset>
+    <div id="prodTotals"></div>
+  </section>
+  </div></div>
+  <div class="row" style="margin-top:6px"><button class="btn" data-action="dup-deal" data-id="${d.id}">Duplicate deal</button><span class="spacer"></span><button class="btn danger" data-action="del-deal" data-id="${d.id}">Delete deal</button></div>
+  </div>`;
+}
+
+function meter(title, m, extra) {
+  const cap = m.cap, used = m.used;
+  const w = cap == null ? 0 : cap <= 0 ? (used > 0 ? 100 : 100) : Math.min(100, used / cap * 100);
+  const leftTxt = m.state === 'blocked' ? 'Blocked' : m.remaining == null ? 'No cap set' : (m.remaining < 0 ? 'Over ' + money(-m.remaining) : money(m.remaining) + ' left');
+  return `<div class="meter"><div class="meter-head"><b>${title}</b><span class="left ${m.state}">${leftTxt}</span></div>
+    <div class="bar"><span class="${m.state}" style="width:${w}%"></span></div>
+    <div class="meter-sub">${money(used)} used of ${money(cap)}${m.binding ? ` · <b>Binding:</b> ${esc(m.binding.label)}` : ''}</div>
+    ${extra || ''}
+    ${m.candidates && m.candidates.length > 1 ? `<details><summary>All caps (lower wins)</summary><ul class="caplist">${m.candidates.map(c => `<li class="${m.binding === c ? 'bind' : ''}"><span>${m.binding === c ? '✓ ' : ''}${esc(c.label)}</span><span>${money(c.value)}</span></li>`).join('')}</ul></details>` : ''}</div>`;
+}
+
+function refresh() {
+  if (view.name !== 'deal') return;
+  const d = findDeal(view.id); if (!d) return;
+  const { bank, sheet } = dealCtx(d);
+  const c = compute(d);
+  const ap = d.approval || {};
+  // banner
+  const facts = [];
+  if (N(ap.approvedRate) != null) facts.push('Approved ' + pct(N(ap.approvedRate)));
+  facts.push(d.lenderType === 'cu' ? 'No hold (CU)' : 'Hold ≤ ' + (c.holdLimit.max == null ? '—' : c.holdLimit.max + ' pts'));
+  if (N(ap.backCap.dollar) != null || N(ap.backCap.pct) != null) facts.push('BE cap ' + [N(ap.backCap.dollar) != null ? money(N(ap.backCap.dollar)) : null, N(ap.backCap.pct) != null ? ap.backCap.pct + '%' : null].filter(Boolean).join(' / '));
+  if (N(ap.frontCap.dollar) != null || N(ap.frontCap.pct) != null) facts.push('FE cap ' + [N(ap.frontCap.dollar) != null ? money(N(ap.frontCap.dollar)) : null, N(ap.frontCap.pct) != null ? ap.frontCap.pct + '%' : null].filter(Boolean).join(' / '));
+  if (N(ap.maxLtvPct) != null) facts.push('Max LTV ' + ap.maxLtvPct + '%');
+  const hasApproval = N(ap.approvedRate) != null || ap.noProducts || ap.noFront || ap.noBack || (ap.restrictions || '').trim() || N(ap.holdablePts) != null;
+  const red = hasApproval || c.violations.length || c.stops.length;
+  const kpi = (lab, v) => `<div class="kpi ${v != null && v < 0 ? 'neg' : ''}"><span>${lab}</span><b>${money(v)}</b></div>`;
+  $('#banner').innerHTML = `<div class="banner ${red ? 'stop' : ''}">
+    <div class="lbl">${hasApproval ? '⛔ Approval hard stops' : 'No approval entered yet'}</div>
+    ${c.stops.map(s => `<span class="pill">${esc(s)}</span>`).join('')}
+    ${(ap.restrictions || '').trim() ? `<span class="pill">${esc(ap.restrictions.trim().slice(0, 80))}</span>` : ''}
+    <div class="facts">${esc(facts.join(' · '))}</div>
+    <div class="kpis">${kpi('FE left', c.front.remaining)}${kpi('BE left', c.back.remaining)}${kpi('LTV room', c.ltv.remaining)}<div class="kpi"><span>Rate</span><b>${c.rate ? pct(c.rate.effective) : '—'}</b></div></div>
+    ${c.violations.length ? `<ul>${c.violations.map(v => `<li><b>${esc(v)}</b></li>`).join('')}</ul>` : ''}
+  </div>`;
+  // sheet currency check
+  let sc = '';
+  if (!sheet) sc = '<div class="note bad">No rate sheet selected. Add one under Banks.</div>';
+  else if (c.currency.warn && !d.sheetOverride) sc = `<div class="note warn"><b>Is this the current rate sheet?</b><br>⚠ ${esc(c.currency.messages.join(' · '))}
+      <div class="row" style="margin-top:8px">${c.currency.newest && !c.currency.isNewest ? `<button class="btn sm" data-action="use-newest">Switch to newest</button>` : ''}<button class="btn sm" data-action="sheet-override">Use this sheet anyway</button></div></div>`;
+  else if (c.currency.warn && d.sheetOverride) sc = `<div class="note warn small">Override on: using this sheet despite “${esc(c.currency.messages.join('; '))}”. <button class="btn sm" data-action="sheet-unoverride">Undo</button></div>`;
+  else if (!d.sheetConfirmed) sc = `<div class="note info"><b>Is this the current rate sheet?</b> ${esc(monthLabel(sheet.effectiveDate))}, effective ${esc(sheet.effectiveDate)} (${c.currency.ageDays} days old).
+      <div class="row" style="margin-top:8px"><button class="btn sm primary" data-action="sheet-yes">Yes, it's current</button><button class="btn sm" data-action="sheet-no">No — pick another</button></div></div>`;
+  else sc = `<div class="note ok small">✓ Confirmed current rate sheet (effective ${esc(sheet.effectiveDate)}).</div>`;
+  if (sheet && sheet.specialConditions) sc += `<div class="note info small"><b>Sheet conditions:</b> ${esc(sheet.specialConditions)}</div>`;
+  $('#sheetCheck').innerHTML = sc;
+  // book
+  $('#bookOut').innerHTML = `<div class="note ${c.book.value == null ? 'warn' : 'info'} small">Using <b>${esc(c.book.source)}</b>: <b>${money(c.book.value)}</b>${c.ltv.pct != null ? ` × ${c.ltv.pct}% LTV (${esc(c.ltv.source)}) = max financed <b>${money(c.ltv.maxTotal)}</b> − ${money(c.financed)} = <b>${money(c.ltv.roomBeforeProducts)}</b> room before products` : ' · set LTV % on the rate sheet'}</div>`;
+  // rate
+  const r = c.rate;
+  $('#rateOut').innerHTML = `<table class="kv">
+    <tr><td>Sheet buy rate${c.sheetRate ? ` (tier ${esc(d.tier)}, ${esc(c.sheetRate.row.yearMin || '…')}–${esc(c.sheetRate.row.yearMax || '…')})` : ''}</td><td>${c.sheetRate ? pct(c.sheetRate.rate) : '—'}</td></tr>
+    <tr><td>Approval rate</td><td>${c.apRate != null ? pct(c.apRate) : '—'}</td></tr>
+    <tr><td>Base used</td><td>${c.baseRate != null ? pct(c.baseRate) + ' (' + c.baseSource + ')' : '—'}</td></tr>
+    <tr><td>Hold <span class="small muted">max ${c.holdLimit.max == null ? '—' : c.holdLimit.max + ' pts'} · ${esc(c.holdLimit.reason)}</span></td><td>+${pct(c.hold.hold)}${c.hold.clamped ? ' ⚠' : ''}</td></tr>
+    ${r && r.bump ? `<tr><td>LTV rate bump (over ${c.bump.tier.above}%)</td><td style="color:var(--bad)">+${pct(r.bump)}</td></tr>` : ''}
+    ${r && r.discount ? `<tr><td>Discounts</td><td style="color:var(--ok)">−${pct(r.discount)}</td></tr>` : ''}
+  </table>
+  <div class="rate-big"><div><span>Signed rate</span><b>${r ? pct(r.signed) : '—'}</b></div><div><span>Effective</span><b>${r ? pct(r.effective) : '—'}</b></div></div>
+  ${c.hold.clamped ? `<div class="note bad small">Requested hold ${pct(c.hold.requested)} is over the limit; using ${pct(c.hold.hold)}.</div>` : ''}`;
+  // caps
+  const ltvM = { used: c.ltv.totalFinanced, cap: c.ltv.maxTotal, remaining: c.ltv.remaining, state: c.ltv.state, binding: c.ltv.source ? { label: c.ltv.source + ' ' + c.ltv.pct + '%' } : null, candidates: [] };
+  const ltvExtra = `<div class="meter-sub">LTV ${c.ltv.ltvBase != null ? c.ltv.ltvBase + '%' : '—'} before products → <b>${c.ltv.ltvActual != null ? c.ltv.ltvActual + '%' : '—'}</b> with products</div>`;
+  $('#capsOut').innerHTML = meter('Front-end', c.front) + meter('Back-end', c.back) + meter('LTV room', ltvM, ltvExtra)
+    + c.warnings.map(w => `<div class="note warn small">${esc(w)}</div>`).join('')
+    + (c.ltv.remaining != null ? `<div class="note info small">Most product she can still add: <b>FE ${money(minPos(c.front.remaining, c.ltv.remaining))}</b> · <b>BE ${money(minPos(c.back.remaining, c.ltv.remaining))}</b> (lesser of cap room and LTV room).</div>` : '');
+  $('#prodTotals').innerHTML = `<div class="totals"><div>Front-end<b>${money(c.tally.front)}</b></div><div>Back-end<b>${money(c.tally.back)}</b></div><div>Total<b>${money(c.tally.total)}</b></div></div>`;
+}
+function minPos(a, b) { const xs = [a, b].filter(x => x != null); if (!xs.length) return null; return Math.max(0, Math.min(...xs)); }
+
+// ---------- banks ----------
+function banksView() {
+  return `${db.banks.map(b => { const ss = sheetsSorted(b); return `<section class="card" data-ctx="bank" data-id="${b.id}">
+    <h2>${esc(b.name || 'Unnamed')} ${b.sample ? '<span class="tag sample">Sample</span>' : ''}<span class="tag">${b.type === 'cu' ? 'Credit union' : 'Bank'}</span></h2>
+    <div class="grid"><label class="f">Name<input data-path="name" value="${esc(b.name)}"></label>
+      <label class="f">Type<select data-path="type" data-rerender><option value="bank" ${b.type === 'bank' ? 'selected' : ''}>Bank</option><option value="cu" ${b.type === 'cu' ? 'selected' : ''}>Credit union</option></select></label></div>
+    <div style="margin-top:8px">${ss.map((s, i) => `<div class="item"><div class="grow"><div class="title">${esc(monthLabel(s.effectiveDate))} ${i === 0 ? '<span class="tag newest">Newest</span>' : ''}</div>
+      <div class="small muted">Effective ${esc(s.effectiveDate || '?')} · LTV ${esc(s.ltvPct || '—')}% · ${s.rates.length} rate rows${s.sourceFile ? ' · ' + esc(s.sourceFile) : ''}</div></div>
+      <a class="btn sm" href="#/sheet/${b.id}/${s.id}">Edit</a><button class="btn sm danger" data-action="del-sheet" data-bank="${b.id}" data-id="${s.id}">✕</button></div>`).join('') || '<p class="muted small">No rate sheets yet.</p>'}</div>
+    <div class="row" style="margin-top:8px"><button class="btn sm primary" data-action="new-sheet" data-bank="${b.id}">+ New month (copy newest)</button>
+      <label class="btn sm">📄 Upload rate sheet PDF<input type="file" accept="application/pdf,.pdf" data-upload="sheet" data-bank="${b.id}" hidden></label>
+      <span class="spacer"></span><button class="btn sm danger" data-action="del-bank" data-id="${b.id}">Delete</button></div>
+  </section>`; }).join('')}
+  <div class="row"><button class="btn primary" data-action="add-bank" data-type="bank">+ Add bank</button><button class="btn" data-action="add-bank" data-type="cu">+ Add credit union</button></div>
+  <section class="card"><h2>Backup</h2><p class="small muted">Data lives in this browser only. Export a copy now and then.</p>
+    <div class="row"><button class="btn sm" data-action="export">Export JSON</button><label class="btn sm">Import JSON<input type="file" accept="application/json,.json" data-upload="import" hidden></label><button class="btn sm danger" data-action="reset">Reset to sample data</button></div></section>`;
+}
+
+function sheetView() {
+  const b = findBank(view.bank); const s = b && b.sheets.find(x => x.id === view.id);
+  if (!s) return '<div class="card">Sheet not found. <a href="#/banks">Back</a></div>';
+  const cu = b.type === 'cu';
+  return `<div data-ctx="sheet" data-bank="${b.id}" data-id="${s.id}">
+  <div class="row" style="margin-top:8px"><a class="btn sm" href="#/banks">‹ Banks</a><b>${esc(b.name)}</b></div>
+  ${b.sample ? '<div class="note warn small">SAMPLE DATA — replace with a real rate sheet.</div>' : ''}
+  ${s.sourceFile ? `<div class="note info small">From PDF: ${esc(s.sourceFile)}. Auto-read is a placeholder for now — check every field.</div>` : ''}
+  <section class="card"><h2>Rate sheet</h2><div class="grid">
+    ${textField('Effective date', 'effectiveDate', s, { type: 'date' })}
+    ${textField('Label (optional)', 'label', s)}
+    ${numField('Max LTV %', 'ltvPct', s, { ph: '120' })}
+    ${numField('Max hold (points)', 'maxHold', s, { ph: cu ? 'CU: none' : '2', dis: cu })}
+  </div>${cu ? '<p class="small muted">Credit unions never allow holding rate; hold is forced to 0.</p>' : ''}</section>
+  <section class="card"><h2>Allowances (lower of $ and % wins)</h2>
+    ${['frontAllowance', 'backAllowance'].map(k => `<div class="small" style="font-weight:700;margin:6px 0">${k === 'frontAllowance' ? 'Front-end' : 'Back-end'} allowance</div><div class="grid3">
+      ${numField('$ max', k + '.dollar', s, { ph: '$' })}${numField('% max', k + '.pct', s, { ph: '%' })}
+      <label class="f">% of<select data-path="${k}.pctBase"><option value="price" ${s[k].pctBase !== 'book' ? 'selected' : ''}>Purchase price</option><option value="book" ${s[k].pctBase === 'book' ? 'selected' : ''}>Book value</option></select></label></div>`).join('')}
+  </section>
+  <section class="card"><h2>Which products count where</h2>
+    ${PT.map(t => `<div class="row" style="margin:6px 0"><span style="flex:1">${esc(t.label)}</span><div style="width:190px">${seg('productMap.' + t.key, s, [['front', 'Front'], ['back', 'Back']])}</div></div>`).join('')}
+  </section>
+  <section class="card"><h2>Rates by vehicle year × tier</h2>
+    <div class="rt head"><span>Year from</span><span>Year to</span><span>A %</span><span>B %</span><span>C %</span><span></span></div>
+    ${s.rates.map((r, i) => `<div class="rt">${['yearMin', 'yearMax', 'A', 'B', 'C'].map(f => `<input data-path="rates.${i}.${f}" inputmode="decimal" value="${esc(r[f])}" placeholder="${f.startsWith('year') ? 'any' : '%'}">`).join('')}<button class="x" data-action="del-row" data-list="rates" data-i="${i}">✕</button></div>`).join('')}
+    <p class="small muted">Leave a year blank for open-ended (e.g. 2024 → blank = 2024 and newer). First matching row wins.</p>
+    <button class="btn sm" data-action="add-row" data-list="rates">+ Add year range</button>
+  </section>
+  <section class="card"><h2>Conditional discounts</h2>
+    ${s.discounts.map((x, i) => `<div class="kv2"><input data-path="discounts.${i}.label" value="${esc(x.label)}" placeholder="Auto-pay + e-statements"><input data-path="discounts.${i}.pct" inputmode="decimal" value="${esc(x.pct)}" placeholder="% off"><button class="x" data-action="del-row" data-list="discounts" data-i="${i}">✕</button></div>`).join('')}
+    <button class="btn sm" data-action="add-row" data-list="discounts">+ Add discount</button>
+  </section>
+  <section class="card"><h2>LTV rate tiers (optional)</h2>
+    ${s.ltvTiers.map((x, i) => `<div class="kv2"><label class="f">Above LTV %<input data-path="ltvTiers.${i}.above" inputmode="decimal" value="${esc(x.above)}" placeholder="115"></label><label class="f">Rate +%<input data-path="ltvTiers.${i}.bump" inputmode="decimal" value="${esc(x.bump)}" placeholder="0.5"></label><button class="x" data-action="del-row" data-list="ltvTiers" data-i="${i}">✕</button></div>`).join('')}
+    <p class="small muted">Example: above 115% LTV add +0.5% to the rate. The deal screen warns before products push over a tier.</p>
+    <button class="btn sm" data-action="add-row" data-list="ltvTiers">+ Add LTV tier</button>
+  </section>
+  <section class="card"><h2>Special conditions</h2><textarea data-path="specialConditions" placeholder="Anything else from the sheet">${esc(s.specialConditions)}</textarea></section>
+  </div>`;
+}
+
+// ---------- events ----------
+function touch(obj) { const d = view.name === 'deal' ? findDeal(view.id) : null; if (d) d.updatedAt = Date.now(); save(); }
+function onEdit(e) {
+  const el = e.target; if (!el.dataset || !el.dataset.path) return;
+  const obj = ctxObj(el); if (!obj) return;
+  const val = el.type === 'checkbox' ? el.checked : el.value;
+  setPath(obj, el.dataset.path, val);
+  if (view.name === 'deal' && (el.dataset.path === 'bankId')) { const b = findBank(val); const s = sheetsSorted(b)[0]; obj.sheetId = s ? s.id : ''; obj.sheetConfirmed = false; obj.sheetOverride = false; obj.discountsOn = []; if (b) obj.lenderType = b.type; }
+  if (view.name === 'deal' && el.dataset.path === 'sheetId') { obj.sheetConfirmed = false; obj.sheetOverride = false; }
+  touch(obj);
+  if (el.hasAttribute('data-rerender') && e.type === 'change') render(); else refresh();
+}
+document.addEventListener('input', e => { if (e.target.matches('input:not([type=checkbox]):not([type=file]),textarea')) onEdit(e); });
+document.addEventListener('change', async e => {
+  const el = e.target;
+  if (el.matches('select,input[type=checkbox][data-path],input[type=date]')) return onEdit(e);
+  if (el.dataset.discount) { const d = findDeal(view.id); const set = new Set(d.discountsOn || []); el.checked ? set.add(el.dataset.discount) : set.delete(el.dataset.discount); d.discountsOn = [...set]; touch(d); return refresh(); }
+  if (el.dataset.upload && el.files && el.files[0]) { await handleUpload(el.dataset.upload, el.files[0], el); el.value = ''; }
+});
+async function handleUpload(kind, file, el) {
+  if (kind === 'import') {
+    try { const d = JSON.parse(await file.text()); if (!d || d.version !== 1 || !Array.isArray(d.banks)) throw new Error('Not a Deal Calc backup'); if (confirm('Replace all data on this device with the backup?')) { db = d; saveNow(); route(); } } catch (err) { alert(err.message); }
+    return;
+  }
+  if (kind === 'book') {
+    const d = findDeal(view.id); const r = await extractBookValues(file);
+    d.book.sourceFile = file.name; ['kbbBank', 'kbbCU', 'msrp'].forEach(k => { if (r[k] != null) d.book[k] = String(r[k]); });
+    touch(d); render();
+    $('#bookNote').innerHTML = r.placeholder ? `<div class="note warn small">Got ${esc(file.name)}. Auto-read isn't set up yet (waiting on sample PDFs) — type the values below.</div>` : '';
+  } else if (kind === 'approval') {
+    const d = findDeal(view.id); const r = await extractApproval(file);
+    d.approval.sourceFile = file.name; Object.assign(d.approval, r.approval || {});
+    touch(d); render();
+    $('#approvalNote').innerHTML = r.placeholder ? `<div class="note warn small">Got ${esc(file.name)}. Auto-read isn't set up yet — enter the approval terms below.</div>` : '';
+  } else if (kind === 'sheet') {
+    const b = findBank(el.dataset.bank); const r = await extractRateSheet(file);
+    const base = sheetsSorted(b)[0]; const s = Object.assign(base ? clone(base) : blankSheet(b.type), r.sheet || {}, { id: uid(), sourceFile: file.name, effectiveDate: (r.sheet && r.sheet.effectiveDate) || monthStart(0), label: '' });
+    if (base && !(r.sheet && r.sheet.effectiveDate) && base.effectiveDate >= s.effectiveDate) s.effectiveDate = todayISO();
+    b.sheets.push(s); saveNow(); location.hash = '#/sheet/' + b.id + '/' + s.id;
+  }
+}
+document.addEventListener('click', e => {
+  const segBtn = e.target.closest('[data-seg]');
+  if (segBtn) {
+    const obj = ctxObj(segBtn); if (!obj) return;
+    const path = segBtn.dataset.seg, val = segBtn.dataset.val;
+    setPath(obj, path, val);
+    if (view.name === 'deal' && path === 'lenderType') {
+      const b = findBank(obj.bankId);
+      if (!b || b.type !== val) { const nb = db.banks.find(x => x.type === val); if (nb) { obj.bankId = nb.id; const s = sheetsSorted(nb)[0]; obj.sheetId = s ? s.id : ''; obj.sheetConfirmed = false; obj.sheetOverride = false; obj.discountsOn = []; } }
+      if (val === 'cu') obj.hold = '0';
+    }
+    touch(obj); return render();
+  }
+  const a = e.target.closest('[data-action]'); if (!a) return;
+  const act = a.dataset.action;
+  const d = view.name === 'deal' ? findDeal(view.id) : null;
+  const sheetObj = view.name === 'sheet' ? (findBank(view.bank).sheets.find(s => s.id === view.id)) : null;
+  switch (act) {
+    case 'new-deal': { const nd = newDeal(); db.deals.push(nd); saveNow(); location.hash = '#/deal/' + nd.id; break; }
+    case 'dup-deal': { const src = findDeal(a.dataset.id); const nd = clone(src); nd.id = uid(); nd.name = (src.name || 'Deal') + ' (copy)'; nd.sample = false; nd.createdAt = nd.updatedAt = Date.now(); nd.sheetConfirmed = false; nd.sheetOverride = false; nd.products.forEach(p => p.id = uid()); db.deals.push(nd); saveNow(); location.hash = '#/deal/' + nd.id; break; }
+    case 'del-deal': if (confirm('Delete this deal?')) { db.deals = db.deals.filter(x => x.id !== a.dataset.id); saveNow(); if (view.name === 'deal') location.hash = '#/deals'; else render(); } break;
+    case 'add-prod': d.products.push({ id: uid(), type: a.dataset.type, price: '' }); touch(d); render(); { const lp = $('#lastPrice'); if (lp) { lp.focus(); lp.scrollIntoView({ block: 'center' }); } } break;
+    case 'del-prod': d.products.splice(+a.dataset.i, 1); touch(d); render(); break;
+    case 'hold': { const lim = compute(d).holdLimit; let h = Math.max(0, (N(d.hold) || 0) + parseFloat(a.dataset.step)); if (lim.max != null) h = Math.min(h, lim.max); d.hold = String(+h.toFixed(3)); $('#holdInput').value = d.hold; touch(d); refresh(); break; }
+    case 'sheet-yes': d.sheetConfirmed = true; touch(d); refresh(); break;
+    case 'sheet-no': d.sheetConfirmed = false; touch(d); { const s = document.querySelector('[data-path=sheetId]'); s.focus(); s.scrollIntoView({ block: 'center' }); } break;
+    case 'sheet-override': d.sheetOverride = true; d.sheetConfirmed = true; touch(d); refresh(); break;
+    case 'sheet-unoverride': d.sheetOverride = false; d.sheetConfirmed = false; touch(d); refresh(); break;
+    case 'use-newest': { const b = findBank(d.bankId); const s = sheetsSorted(b)[0]; d.sheetId = s.id; d.sheetConfirmed = false; d.sheetOverride = false; touch(d); render(); break; }
+    case 'add-bank': { const t = a.dataset.type; const b = { id: uid(), name: t === 'cu' ? 'New credit union' : 'New bank', type: t, sheets: [blankSheet(t)] }; db.banks.push(b); saveNow(); render(); break; }
+    case 'del-bank': if (confirm('Delete this lender and all its rate sheets?')) { db.banks = db.banks.filter(b => b.id !== a.dataset.id); saveNow(); render(); } break;
+    case 'new-sheet': { const b = findBank(a.dataset.bank); const base = sheetsSorted(b)[0]; const s = Object.assign(base ? clone(base) : blankSheet(b.type), { id: uid(), effectiveDate: monthStart(0), label: '', sourceFile: '' }); if (base && base.effectiveDate >= s.effectiveDate) s.effectiveDate = todayISO(); b.sheets.push(s); saveNow(); location.hash = '#/sheet/' + b.id + '/' + s.id; break; }
+    case 'del-sheet': if (confirm('Delete this rate sheet?')) { const b = findBank(a.dataset.bank); b.sheets = b.sheets.filter(s => s.id !== a.dataset.id); saveNow(); render(); } break;
+    case 'add-row': { const L = a.dataset.list; const row = L === 'rates' ? { yearMin: '', yearMax: '', A: '', B: '', C: '' } : L === 'discounts' ? { id: uid(), label: '', pct: '' } : { above: '', bump: '' }; sheetObj[L].push(row); saveNow(); render(); break; }
+    case 'del-row': sheetObj[a.dataset.list].splice(+a.dataset.i, 1); saveNow(); render(); break;
+    case 'export': { const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(blob); const l = document.createElement('a'); l.href = u; l.download = 'deal-calc-backup-' + todayISO() + '.json'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 1000); break; }
+    case 'reset': if (confirm('Erase everything and reload the sample data?')) { db = seed(); saveNow(); location.hash = '#/deals'; route(); } break;
+  }
+});
+window.addEventListener('hashchange', route);
+db = load();
+saveNow();
+if (!location.hash) location.hash = '#/deals';
+route();
+})();
+</script>
+</body>
+</html>
